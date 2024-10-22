@@ -54,3 +54,6 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script_stop: true
         script: "./startup.sh"
+
+    - name: Run SonarQube
+      run: mvn sonar:sonar -Dsonar.projectKey=ssacthree-ssacthree-auth-api -Dsonar.host.url=${{secrets.SONAR_HOST}} -Dsonar.token=${{secrets.SONAR_TOKEN}}
