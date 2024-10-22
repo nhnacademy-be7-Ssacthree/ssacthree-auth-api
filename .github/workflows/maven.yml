@@ -56,4 +56,4 @@ jobs:
         script: "./startup.sh"
 
     - name: Run SonarQube
-      run: mvn sonar:sonar -Dsonar.projectKey=ssacthree-ssacthree-auth-api -Dsonar.host.url=${{secrets.SONAR_HOST}} -Dsonar.token=${{secrets.SONAR_TOKEN}}
+      run: mvn sonar:sonar -Dsonar.projectKey=ssacthree-auth-api -Dsonar.host.url=${{secrets.SONAR_HOST}} -Dsonar.token=${{secrets.SONAR_TOKEN}}
