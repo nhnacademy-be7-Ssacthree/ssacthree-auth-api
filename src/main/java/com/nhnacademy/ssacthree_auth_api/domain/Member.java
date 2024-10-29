@@ -23,8 +23,8 @@ public class Member {
     private Long customerId;
 
 
-    @Column(name= "member_id")
-    private Long memberId;
+    @Column(name= "member_grade_id")
+    private Long memberGradeId;
 
     @Column(name= "member_login_id")
     private String memberLoginId;
