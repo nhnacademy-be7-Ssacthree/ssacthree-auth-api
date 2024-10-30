@@ -1,5 +1,6 @@
 package com.nhnacademy.ssacthree_auth_api.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.ssacthree_auth_api.jwt.JWTUtil;
 import com.nhnacademy.ssacthree_auth_api.jwt.LoginFilter;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,7 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception{
@@ -32,19 +35,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.csrf((auth) -> auth.disable());
+        http.csrf(AbstractHttpConfigurer::disable);
 
-        http.formLogin((auth) -> auth.disable());
+        http.formLogin(AbstractHttpConfigurer::disable);
 
-        http.httpBasic((auth) -> auth.disable());
+        http.httpBasic(AbstractHttpConfigurer::disable);
 
         http.authorizeHttpRequests((auth) -> auth
-            .requestMatchers("/login", "/" , "/register").permitAll()
+            .requestMatchers("/api/auth/login", "/" , "/register").permitAll()
             .requestMatchers("/admin").hasRole("ADMIN")
             .anyRequest().authenticated());
 
-
-        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration),jwtUtil), UsernamePasswordAuthenticationFilter.class);
+        LoginFilter loginFilter = new LoginFilter(
+            authenticationManager(authenticationConfiguration), jwtUtil,objectMapper);
+        loginFilter.setFilterProcessesUrl("/api/auth/login");
+        http.addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.sessionManagement((session) -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS));

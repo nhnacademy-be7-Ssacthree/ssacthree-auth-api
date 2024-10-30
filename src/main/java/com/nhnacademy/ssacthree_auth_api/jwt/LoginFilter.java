@@ -1,9 +1,13 @@
 package com.nhnacademy.ssacthree_auth_api.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.ssacthree_auth_api.domain.CustomUserDetails;
+import com.nhnacademy.ssacthree_auth_api.dto.LoginRequestDto;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +24,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final String usernameParameter = "memberLoginId";
     private final String passwordParameter = "memberPassword";
     private final JWTUtil jwtUtil;
+    private final ObjectMapper objectMapper;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
+    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, ObjectMapper objectMapper) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.objectMapper = objectMapper;
         setUsernameParameter(usernameParameter);
         setPasswordParameter(passwordParameter);
     }
@@ -31,10 +37,15 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 
-        String memberLoginId = obtainUsername(request);
-        String memberPassword = obtainPassword(request);
+        LoginRequestDto loginRequestDto = null;
+        try {
+            loginRequestDto = objectMapper.readValue(request.getInputStream(),
+                LoginRequestDto.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(memberLoginId, memberPassword,null);
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(loginRequestDto.getMemberLoginId(), loginRequestDto.getMemberPassword(),null);
 
         return authenticationManager.authenticate(authToken);
     }
@@ -53,7 +64,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String token = jwtUtil.createJwt(memberLoginId, role, 600*600*10L);
 
-        response.addHeader("Authorization", "Bearer " + token);
+        String cookieValue = token;
+        Cookie cookie = new Cookie("access-token",cookieValue);
+        cookie.setMaxAge(600 * 600 * 10);
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+//        response.addHeader("Authorization", "Bearer " + token);
     }
 
     @Override
@@ -61,6 +77,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         response.setStatus(401);
     }
+
+
 
 
 }
