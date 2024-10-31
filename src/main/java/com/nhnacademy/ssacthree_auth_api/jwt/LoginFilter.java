@@ -53,29 +53,53 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,Authentication authentication) {
 
-        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        String memberLoginId = customUserDetails.getUsername();
+//        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+//        String memberLoginId = customUserDetails.getUsername();
+//
+//        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+//        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
+//        GrantedAuthority auth = iterator.next();
+//
+//        String role = auth.getAuthority();
+//
+//        String token = jwtUtil.createJwt(memberLoginId, role, 600*600*10L);
+//
+//        String cookieValue = token;
+//        Cookie cookie = new Cookie("access-token",cookieValue);
+//        cookie.setMaxAge(600 * 600 * 10);
+//        cookie.setHttpOnly(true);
+//        response.addCookie(cookie);
+//        response.addHeader("Authorization", "Bearer " + token);
 
+        //유저 정보 불러옴.
+        String username = authentication.getName();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
 
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(memberLoginId, role, 600*600*10L);
+        //토큰을 생성 하는 방법
+        String access = jwtUtil.createJwt("access",username,role,600000L);
+        String refresh = jwtUtil.createJwt("refresh",username,role,86500000L);
 
-        String cookieValue = token;
-        Cookie cookie = new Cookie("access-token",cookieValue);
-        cookie.setMaxAge(600 * 600 * 10);
-        cookie.setHttpOnly(true);
-        response.addCookie(cookie);
-//        response.addHeader("Authorization", "Bearer " + token);
+        //응답 설정
+        response.addCookie(createCookie("access-token",access,600000L));
+        response.addCookie(createCookie("refresh-token",refresh,86500000L));
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
 
         response.setStatus(401);
+    }
+
+    private Cookie createCookie(String key, String value, long expired) {
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge((int)expired);
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        return cookie;
     }
 
 
