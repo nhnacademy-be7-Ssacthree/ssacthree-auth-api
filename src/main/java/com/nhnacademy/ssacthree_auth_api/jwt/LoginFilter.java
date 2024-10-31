@@ -85,7 +85,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         //응답 설정
         response.addCookie(createCookie("access-token",access,600000L));
-        response.addCookie(createCookie("refresh-token",refresh,86500000L));
+        response.addCookie(createCookie("refresh-token",refresh,8650000L));
     }
 
     @Override
@@ -96,6 +96,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private Cookie createCookie(String key, String value, long expired) {
         Cookie cookie = new Cookie(key, value);
+        cookie.setPath("/");
         cookie.setMaxAge((int)expired);
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
