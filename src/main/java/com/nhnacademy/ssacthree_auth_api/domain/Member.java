@@ -40,6 +40,7 @@ public class Member {
     @Column(name= "member_created_at")
     private LocalDateTime memberCreatedAt;
 
+    @Setter
     @Column(name= "member_last_login_at")
     private LocalDateTime memberLastLoginAt;
 

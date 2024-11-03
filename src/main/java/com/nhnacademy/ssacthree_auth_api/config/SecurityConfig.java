@@ -2,8 +2,10 @@ package com.nhnacademy.ssacthree_auth_api.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.ssacthree_auth_api.jwt.CustomLogoutFilter;
+import com.nhnacademy.ssacthree_auth_api.jwt.JWTFilter;
 import com.nhnacademy.ssacthree_auth_api.jwt.JWTUtil;
 import com.nhnacademy.ssacthree_auth_api.jwt.LoginFilter;
+import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +31,7 @@ public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final ObjectMapper objectMapper;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final MemberRepository memberRepository;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception{
@@ -47,16 +50,17 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests((auth) -> auth
             .requestMatchers("/api/auth/login", "/" , "/register").permitAll()
-            .requestMatchers("/reissue").permitAll()
+            .requestMatchers("/api/auth/reissue").permitAll()
             .requestMatchers("/admin").hasRole("ADMIN")
             .anyRequest().authenticated());
 
         LoginFilter loginFilter = new LoginFilter(
             authenticationManager(authenticationConfiguration), jwtUtil,objectMapper,
-            refreshTokenRepository);
+            refreshTokenRepository,memberRepository);
 
         loginFilter.setFilterProcessesUrl("/api/auth/login");
 
+        http.addFilterBefore(new JWTFilter(jwtUtil),LoginFilter.class);
         http.addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshTokenRepository), LogoutFilter.class);
 

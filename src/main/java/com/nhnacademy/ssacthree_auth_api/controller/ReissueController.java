@@ -11,14 +11,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/auth")
 public class ReissueController {
 
     private final JWTUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final long accessTokenExpired = 600000L;
+    private final long refreshTokenExpired = 3600000L;
 
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
@@ -67,14 +71,14 @@ public class ReissueController {
         String role = jwtUtil.getRole(refresh);
 
         //make new JWT
-        String newAccess = jwtUtil.createJwt("access", memberLoginId, role, 600000L);
-        String newRefresh = jwtUtil.createJwt("refresh", memberLoginId, role, 86400000L);
+        String newAccess = jwtUtil.createJwt("access", memberLoginId, role, accessTokenExpired);
+        String newRefresh = jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired);
 
         refreshTokenRepository.deleteById(jwtUtil.getMemberLoginId(refresh));
-        addRefreshToken(memberLoginId, newRefresh, 86400000L);
+        addRefreshToken(memberLoginId, newRefresh, refreshTokenExpired);
         //response
-        response.addCookie(createCookie("access-token",newAccess,600000L));
-        response.addCookie(createCookie("refresh-token",newRefresh,86400000L));
+        response.addCookie(createCookie("access-token",newAccess,accessTokenExpired));
+        response.addCookie(createCookie("refresh-token",newRefresh,refreshTokenExpired));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -84,10 +88,10 @@ public class ReissueController {
         refreshTokenRepository.save(refreshToken);
     }
 
-    private Cookie createCookie(String key, String value, long expired) {
+    private Cookie createCookie(String key, String value, long expiredMs) {
         Cookie cookie = new Cookie(key, value);
         cookie.setPath("/");
-        cookie.setMaxAge((int)expired);
+        cookie.setMaxAge((int)expiredMs);
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
         return cookie;

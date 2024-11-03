@@ -31,7 +31,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
         String requestURI = request.getRequestURI();
 
         // uri가 Logout이 아니면 다음 필터로
-        if (!requestURI.equals("/logout")) {
+        if (!requestURI.equals("/api/auth/logout")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -59,14 +59,14 @@ public class CustomLogoutFilter extends GenericFilterBean {
 
 
         // null이 아니야? 그럼 유효기간 확인
-
-        try {
-            jwtUtil.isExpired(refresh);
-        }
-        catch (ExpiredJwtException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
+//
+//        try {
+//            jwtUtil.isExpired(refresh);
+//        }
+//        catch (ExpiredJwtException e) {
+//            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+//            return;
+//        }
 
         // 토큰이 refresh인지 확인하라네 근데 위에서 해야하는거 아닌가..? 쨋든
         String category = jwtUtil.getCategory(refresh);
