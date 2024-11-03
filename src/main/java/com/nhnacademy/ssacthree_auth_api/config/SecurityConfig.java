@@ -51,7 +51,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests((auth) -> auth
             .requestMatchers("/api/auth/login", "/" , "/register").permitAll()
             .requestMatchers("/api/auth/reissue").permitAll()
-            .requestMatchers("/admin").hasRole("ADMIN")
+            .requestMatchers("/api/auth/authenticate").permitAll()
             .anyRequest().authenticated());
 
         LoginFilter loginFilter = new LoginFilter(
