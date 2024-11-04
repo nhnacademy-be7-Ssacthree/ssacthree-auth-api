@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import lombok.Setter;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -27,6 +28,7 @@ public class Member {
     private Long memberGradeId;
 
     @Column(name= "member_login_id")
+    @Setter
     private String memberLoginId;
 
     @Column(name= "member_password")
@@ -38,6 +40,7 @@ public class Member {
     @Column(name= "member_created_at")
     private LocalDateTime memberCreatedAt;
 
+    @Setter
     @Column(name= "member_last_login_at")
     private LocalDateTime memberLastLoginAt;
 

@@ -1,16 +1,19 @@
 package com.nhnacademy.ssacthree_auth_api.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nhnacademy.ssacthree_auth_api.domain.CustomUserDetails;
+import com.nhnacademy.ssacthree_auth_api.domain.Member;
+import com.nhnacademy.ssacthree_auth_api.domain.RefreshToken;
 import com.nhnacademy.ssacthree_auth_api.dto.LoginRequestDto;
+import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
+import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Iterator;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,15 +24,22 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
-    private final String usernameParameter = "memberLoginId";
-    private final String passwordParameter = "memberPassword";
     private final JWTUtil jwtUtil;
     private final ObjectMapper objectMapper;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final MemberRepository memberRepository;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, ObjectMapper objectMapper) {
+    private final long accessTokenExpired = 600000L;
+    private final long refreshTokenExpired = 3600000L;
+    private final String usernameParameter = "memberLoginId";
+    private final String passwordParameter = "memberPassword";
+
+    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, ObjectMapper objectMapper, RefreshTokenRepository refreshRepository,MemberRepository memberRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.objectMapper = objectMapper;
+        this.refreshTokenRepository = refreshRepository;
+        this.memberRepository = memberRepository;
         setUsernameParameter(usernameParameter);
         setPasswordParameter(passwordParameter);
     }
@@ -53,26 +63,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,Authentication authentication) {
 
-//        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-//        String memberLoginId = customUserDetails.getUsername();
-//
-//        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-//        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
-//        GrantedAuthority auth = iterator.next();
-//
-//        String role = auth.getAuthority();
-//
-//        String token = jwtUtil.createJwt(memberLoginId, role, 600*600*10L);
-//
-//        String cookieValue = token;
-//        Cookie cookie = new Cookie("access-token",cookieValue);
-//        cookie.setMaxAge(600 * 600 * 10);
-//        cookie.setHttpOnly(true);
-//        response.addCookie(cookie);
-//        response.addHeader("Authorization", "Bearer " + token);
-
         //유저 정보 불러옴.
-        String username = authentication.getName();
+        String memberLoginId = authentication.getName();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
@@ -80,12 +72,20 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = auth.getAuthority();
 
         //토큰을 생성 하는 방법
-        String access = jwtUtil.createJwt("access",username,role,600000L);
-        String refresh = jwtUtil.createJwt("refresh",username,role,86500000L);
-
+        String access = jwtUtil.createJwt("access",memberLoginId,role,accessTokenExpired);
+        String refresh = jwtUtil.createJwt("refresh",memberLoginId,role,refreshTokenExpired);
+        addRefreshToken(memberLoginId, refresh, refreshTokenExpired);
         //응답 설정
-        response.addCookie(createCookie("access-token",access,600000L));
-        response.addCookie(createCookie("refresh-token",refresh,86500000L));
+        response.addCookie(createCookie("access-token",access,accessTokenExpired));
+        response.addCookie(createCookie("refresh-token",refresh,refreshTokenExpired));
+
+        // 마지막 로그인 날짜 업데이트
+        Member member = memberRepository.findByMemberLoginId(memberLoginId);
+        if (member != null) {
+            member.setMemberLastLoginAt(LocalDateTime.now());
+            memberRepository.save(member);
+        }
+
     }
 
     @Override
@@ -94,15 +94,19 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(401);
     }
 
-    private Cookie createCookie(String key, String value, long expired) {
+    private Cookie createCookie(String key, String value, long expiredMs) {
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge((int)expired);
+        cookie.setPath("/");
+        cookie.setMaxAge((int)expiredMs);
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
         return cookie;
     }
 
-
-
+    private void addRefreshToken(String memberLoginId, String refresh, long expiredMs) {
+        // 이렇게 redis에 저장. ttl 땜시 유효시간 지나면 알아서 레디스에서 삭제됨.
+        RefreshToken refreshToken = new RefreshToken(memberLoginId,refresh,expiredMs);
+        refreshTokenRepository.save(refreshToken);
+    }
 
 }
