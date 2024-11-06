@@ -21,8 +21,8 @@ public class ReissueController {
 
     private final JWTUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final long accessTokenExpired = 600000L;
-    private final long refreshTokenExpired = 3600000L;
+    private final long accessTokenExpired = 30 * 60 * 1000L; // 30분
+    private final long refreshTokenExpired = 120 * 60 * 1000L; // 2시간
 
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
@@ -91,7 +91,7 @@ public class ReissueController {
     private Cookie createCookie(String key, String value, long expiredMs) {
         Cookie cookie = new Cookie(key, value);
         cookie.setPath("/");
-        cookie.setMaxAge((int)expiredMs);
+        cookie.setMaxAge((int) expiredMs / 1000);
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
         return cookie;
