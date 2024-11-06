@@ -97,7 +97,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private Cookie createCookie(String key, String value, long expiredMs) {
         Cookie cookie = new Cookie(key, value);
         cookie.setPath("/");
-        cookie.setMaxAge((int)expiredMs);
+        cookie.setMaxAge((int)expiredMs/1000);
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
         return cookie;

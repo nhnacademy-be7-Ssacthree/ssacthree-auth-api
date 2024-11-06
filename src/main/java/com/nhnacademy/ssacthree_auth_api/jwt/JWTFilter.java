@@ -26,20 +26,17 @@ public class JWTFilter extends OncePerRequestFilter {
         HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
 
-        // 쿠키에서 access키에 담긴 토큰을 꺼냄
-        String accessToken = null;
 
-        // 쿠키가 비어있다면 담 필터로 넘기지 말고.. 로그인하라고 시켜야지..
+
+        // 쿠키가 비어있다면 담 필터로 넘겨
         Cookie[] cookies = request.getCookies();
         if(cookies == null) {
-
-            //response body
-            PrintWriter writer = response.getWriter();
-            writer.print("로그인 하십시오.");
-
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            filterChain.doFilter(request, response);
             return;
         }
+
+        // 쿠키에서 access키에 담긴 토큰을 꺼냄
+        String accessToken = null;
 
         for(Cookie cookie : cookies) {
             if(cookie.getName().equals("access-token")) {
@@ -100,11 +97,4 @@ public class JWTFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-
-        // "/login" 경로를 제외하여 JWT 필터가 동작하지 않도록 설정
-        return path.equals("/api/auth/login");
-    }
 }
