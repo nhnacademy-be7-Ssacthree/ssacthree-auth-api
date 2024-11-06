@@ -63,7 +63,7 @@ public class ReissueController {
 
         // 어느정도 검증 후 DB에 저장되어있는지 확인해야함.
         boolean isExist = refreshTokenRepository.existsByRefreshToken(refresh);
-        if(!isExist) {
+        if (!isExist) {
             return new ResponseEntity<>("refresh token does not exist", HttpStatus.BAD_REQUEST);
         }
 
@@ -75,16 +75,17 @@ public class ReissueController {
         String newRefresh = jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired);
 
         refreshTokenRepository.deleteById(jwtUtil.getMemberLoginId(refresh));
+        refreshTokenRepository.deleteByRefreshToken(refresh);
         addRefreshToken(memberLoginId, newRefresh, refreshTokenExpired);
         //response
-        response.addCookie(createCookie("access-token",newAccess,accessTokenExpired));
-        response.addCookie(createCookie("refresh-token",newRefresh,refreshTokenExpired));
+        response.addCookie(createCookie("access-token", newAccess, accessTokenExpired));
+        response.addCookie(createCookie("refresh-token", newRefresh, refreshTokenExpired));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     private void addRefreshToken(String memberLoginId, String refresh, long expiredMs) {
 
-        RefreshToken refreshToken = new RefreshToken(memberLoginId,refresh,expiredMs);
+        RefreshToken refreshToken = new RefreshToken(memberLoginId, refresh, expiredMs);
         refreshTokenRepository.save(refreshToken);
     }
 
