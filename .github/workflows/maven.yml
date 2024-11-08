@@ -41,7 +41,7 @@ jobs:
         username: ${{ secrets.SSH_ID }}
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT }}
-        source: "target/*.jar"
+        source: "target/ssacthree_auth_api-0.0.1-SNAPSHOT.jar"
         target: "~/"
         rm: false
 
@@ -53,7 +53,10 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script_stop: true
-        script: "./startup.sh"
+        script: |
+            fuser -k 8084/tcp || echo "No process on 8761"
+            chmod +x ./auth_startup.sh
+            ./auth_startup.sh
 
     - name: Run SonarQube
       run: mvn sonar:sonar -Dsonar.projectKey=ssacthree-auth-api -Dsonar.host.url=${{secrets.SONAR_HOST}} -Dsonar.token=${{secrets.SONAR_TOKEN}}
