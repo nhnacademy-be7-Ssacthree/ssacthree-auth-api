@@ -21,8 +21,8 @@ public class ReissueController {
 
     private final JWTUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final long accessTokenExpired = 600000L;
-    private final long refreshTokenExpired = 3600000L;
+    private final long accessTokenExpired = 30 * 60 * 1000L; // 30분
+    private final long refreshTokenExpired = 120 * 60 * 1000L; // 2시간
 
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
@@ -63,7 +63,7 @@ public class ReissueController {
 
         // 어느정도 검증 후 DB에 저장되어있는지 확인해야함.
         boolean isExist = refreshTokenRepository.existsByRefreshToken(refresh);
-        if(!isExist) {
+        if (!isExist) {
             return new ResponseEntity<>("refresh token does not exist", HttpStatus.BAD_REQUEST);
         }
 
@@ -75,23 +75,24 @@ public class ReissueController {
         String newRefresh = jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired);
 
         refreshTokenRepository.deleteById(jwtUtil.getMemberLoginId(refresh));
+        
         addRefreshToken(memberLoginId, newRefresh, refreshTokenExpired);
         //response
-        response.addCookie(createCookie("access-token",newAccess,accessTokenExpired));
-        response.addCookie(createCookie("refresh-token",newRefresh,refreshTokenExpired));
+        response.addCookie(createCookie("access-token", newAccess, accessTokenExpired));
+        response.addCookie(createCookie("refresh-token", newRefresh, refreshTokenExpired));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     private void addRefreshToken(String memberLoginId, String refresh, long expiredMs) {
 
-        RefreshToken refreshToken = new RefreshToken(memberLoginId,refresh,expiredMs);
+        RefreshToken refreshToken = new RefreshToken(memberLoginId, refresh, expiredMs);
         refreshTokenRepository.save(refreshToken);
     }
 
     private Cookie createCookie(String key, String value, long expiredMs) {
         Cookie cookie = new Cookie(key, value);
         cookie.setPath("/");
-        cookie.setMaxAge((int)expiredMs);
+        cookie.setMaxAge((int) expiredMs / 1000);
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
         return cookie;
