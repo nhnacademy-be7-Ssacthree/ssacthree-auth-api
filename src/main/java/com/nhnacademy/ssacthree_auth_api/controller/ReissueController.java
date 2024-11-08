@@ -75,7 +75,7 @@ public class ReissueController {
         String newRefresh = jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired);
 
         refreshTokenRepository.deleteById(jwtUtil.getMemberLoginId(refresh));
-        refreshTokenRepository.deleteByRefreshToken(refresh);
+        
         addRefreshToken(memberLoginId, newRefresh, refreshTokenExpired);
         //response
         response.addCookie(createCookie("access-token", newAccess, accessTokenExpired));
