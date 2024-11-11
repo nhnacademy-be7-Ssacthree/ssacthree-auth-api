@@ -34,7 +34,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final String usernameParameter = "memberLoginId";
     private final String passwordParameter = "memberPassword";
 
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, ObjectMapper objectMapper, RefreshTokenRepository refreshRepository,MemberRepository memberRepository) {
+    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil,
+        ObjectMapper objectMapper, RefreshTokenRepository refreshRepository,
+        MemberRepository memberRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.objectMapper = objectMapper;
@@ -45,7 +47,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+    public Authentication attemptAuthentication(HttpServletRequest request,
+        HttpServletResponse response) throws AuthenticationException {
 
         LoginRequestDto loginRequestDto = null;
         try {
@@ -55,13 +58,15 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
             throw new RuntimeException(e);
         }
 
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(loginRequestDto.getMemberLoginId(), loginRequestDto.getMemberPassword(),null);
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+            loginRequestDto.getLoginId(), loginRequestDto.getPassword(), null);
 
         return authenticationManager.authenticate(authToken);
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,Authentication authentication) {
+    protected void successfulAuthentication(HttpServletRequest request,
+        HttpServletResponse response, FilterChain chain, Authentication authentication) {
 
         //유저 정보 불러옴.
         String memberLoginId = authentication.getName();
@@ -72,12 +77,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = auth.getAuthority();
 
         //토큰을 생성 하는 방법
-        String access = jwtUtil.createJwt("access",memberLoginId,role,accessTokenExpired);
-        String refresh = jwtUtil.createJwt("refresh",memberLoginId,role,refreshTokenExpired);
+        String access = jwtUtil.createJwt("access", memberLoginId, role, accessTokenExpired);
+        String refresh = jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired);
         addRefreshToken(memberLoginId, refresh, refreshTokenExpired);
         //응답 설정
-        response.addCookie(createCookie("access-token",access,accessTokenExpired));
-        response.addCookie(createCookie("refresh-token",refresh,refreshTokenExpired));
+        response.addCookie(createCookie("access-token", access, accessTokenExpired));
+        response.addCookie(createCookie("refresh-token", refresh, refreshTokenExpired));
 
         // 마지막 로그인 날짜 업데이트
         Member member = memberRepository.findByMemberLoginId(memberLoginId);
@@ -89,7 +94,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
-    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
+    protected void unsuccessfulAuthentication(HttpServletRequest request,
+        HttpServletResponse response, AuthenticationException failed) {
 
         response.setStatus(401);
     }
@@ -97,7 +103,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private Cookie createCookie(String key, String value, long expiredMs) {
         Cookie cookie = new Cookie(key, value);
         cookie.setPath("/");
-        cookie.setMaxAge((int) expiredMs/1000);
+        cookie.setMaxAge((int) expiredMs / 1000);
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
         return cookie;
@@ -105,7 +111,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private void addRefreshToken(String memberLoginId, String refresh, long expiredMs) {
         // 이렇게 redis에 저장. ttl 땜시 유효시간 지나면 알아서 레디스에서 삭제됨.
-        RefreshToken refreshToken = new RefreshToken(memberLoginId,refresh,expiredMs);
+        RefreshToken refreshToken = new RefreshToken(memberLoginId, refresh, expiredMs);
         refreshTokenRepository.save(refreshToken);
     }
 
