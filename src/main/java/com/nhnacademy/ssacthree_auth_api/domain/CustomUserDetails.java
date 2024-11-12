@@ -3,36 +3,64 @@ package com.nhnacademy.ssacthree_auth_api.domain;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-@RequiredArgsConstructor
+
 public class CustomUserDetails implements UserDetails {
 
-    private final Member member;
+    private Member member;
+    private Admin admin;
+
+    public CustomUserDetails(Member member) {
+        this.member = member;
+    }
+
+    public CustomUserDetails(Admin admin) {
+        this.admin = admin;
+    }
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<GrantedAuthority> collection = new ArrayList<>();
+        if (member != null) {
+            collection.add(new GrantedAuthority() {
+                @Override
+                public String getAuthority() {
+                    return "ROLE_USER";
+                }
+            });
+        } else {
+            collection.add(new GrantedAuthority() {
+                @Override
+                public String getAuthority() {
+                    return "ROLE_ADMIN";
+                }
+            });
+        }
 
-        collection.add(new GrantedAuthority() {
-            @Override
-            public String getAuthority() {
-                return "ROLE_USER";
-            }
-        });
         return collection;
     }
 
     @Override
     public String getPassword() {
-        return member.getMemberPassword();
+        if (member != null) {
+            return member.getMemberPassword();
+        } else {
+            return admin.getAdminPassword();
+        }
+
     }
 
     @Override
     public String getUsername() {
-        return member.getMemberLoginId();
+        if (member != null) {
+            return member.getMemberLoginId();
+        } else {
+            return admin.getAdminLoginId();
+        }
+
     }
 
     @Override
