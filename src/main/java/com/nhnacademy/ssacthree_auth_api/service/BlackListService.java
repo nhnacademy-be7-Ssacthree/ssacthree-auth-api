@@ -25,7 +25,7 @@ public class BlackListService {
         Cookie[] cookies = request.getCookies();
         String accessToken = null;
         for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("accessToken")) {
+            if (cookie.getName().equals("access-token")) {
                 accessToken = cookie.getValue();
                 break;
             }

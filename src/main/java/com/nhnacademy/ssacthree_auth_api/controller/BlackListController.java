@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth/validation")
+@RequestMapping("/api/auth/validation")
 @RequiredArgsConstructor
 public class BlackListController {
 
