@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import com.nhnacademy.ssacthree_auth_api.domain.Admin;
 import com.nhnacademy.ssacthree_auth_api.domain.CustomUserDetails;
 import com.nhnacademy.ssacthree_auth_api.domain.Member;
 import com.nhnacademy.ssacthree_auth_api.exception.WithdrawMemberException;
-import com.nhnacademy.ssacthree_auth_api.repository.AdminRepository;
 import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
@@ -23,9 +23,6 @@ public class CustomUserDetailsServiceTest {
     @Mock
     private MemberRepository memberRepository;
 
-    @Mock
-    private AdminRepository adminRepository;
-
 
     @InjectMocks
     private CustomUserDetailsService customUserDetailsService;
@@ -38,11 +35,21 @@ public class CustomUserDetailsServiceTest {
             null, "ACTIVE", 0);
 
         when(memberRepository.findByMemberLoginId(memberLoginId)).thenReturn(member);
-        when(adminRepository.findByAdminLoginId(memberLoginId)).thenReturn(null);
         CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(
             memberLoginId);
 
         assertNotNull(userDetails);
+    }
+
+    @Test
+    void testLoadAdminByUsername() {
+
+        String memberLoginId = "test";
+        Admin admin = new Admin(1L, memberLoginId, "password", "test");
+
+        when(memberRepository.findByMemberLoginId(memberLoginId)).thenReturn(null);
+        CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(
+            memberLoginId);
     }
 
     @Test
@@ -53,7 +60,6 @@ public class CustomUserDetailsServiceTest {
             null, "WITHDRAW", 0);
 
         when(memberRepository.findByMemberLoginId(memberLoginId)).thenReturn(member);
-        when(adminRepository.findByAdminLoginId(memberLoginId)).thenReturn(null);
         assertThrows(WithdrawMemberException.class,
             () -> customUserDetailsService.loadUserByUsername(memberLoginId));
     }
@@ -62,7 +68,7 @@ public class CustomUserDetailsServiceTest {
     void testLoadUserByUsernameIfNull() {
 
         when(memberRepository.findByMemberLoginId("test")).thenReturn(null);
-        when(adminRepository.findByAdminLoginId("test")).thenReturn(null);
         assertNull(customUserDetailsService.loadUserByUsername("test"));
     }
+
 }

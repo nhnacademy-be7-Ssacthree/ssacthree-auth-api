@@ -1,17 +1,24 @@
 package com.nhnacademy.ssacthree_auth_api.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhnacademy.ssacthree_auth_api.jwt.AdminLoginFilter;
 import com.nhnacademy.ssacthree_auth_api.jwt.CustomLogoutFilter;
-import com.nhnacademy.ssacthree_auth_api.jwt.JWTFilter;
 import com.nhnacademy.ssacthree_auth_api.jwt.JWTUtil;
 import com.nhnacademy.ssacthree_auth_api.jwt.LoginFilter;
+import com.nhnacademy.ssacthree_auth_api.repository.AdminRepository;
 import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
 import com.nhnacademy.ssacthree_auth_api.service.BlackListService;
+import com.nhnacademy.ssacthree_auth_api.service.CustomAdminDetailsService;
+import com.nhnacademy.ssacthree_auth_api.service.CustomUserDetailsService;
+import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,6 +41,7 @@ public class SecurityConfig {
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
     private final BlackListService blackListService;
+    private final AdminRepository adminRepository;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
@@ -43,7 +51,8 @@ public class SecurityConfig {
 
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, AdminRepository adminRepository)
+        throws Exception {
 
         http.csrf(AbstractHttpConfigurer::disable);
 
@@ -52,19 +61,28 @@ public class SecurityConfig {
         http.httpBasic(AbstractHttpConfigurer::disable);
 
         http.authorizeHttpRequests((auth) -> auth
-            .requestMatchers("/api/auth/login", "/", "/register").permitAll()
+            .requestMatchers("/api/auth/login", "/", "/register", "/api/auth/admin-login")
+            .permitAll()
             .requestMatchers("/api/auth/reissue").permitAll()
-            .requestMatchers("/api/auth/validate").permitAll()
+            .requestMatchers("/api/auth/validation").permitAll()
+            .requestMatchers("/api/auth/admin").permitAll()
+
             .anyRequest().authenticated());
 
         LoginFilter loginFilter = new LoginFilter(
-            authenticationManager(authenticationConfiguration), jwtUtil, objectMapper,
+            userAuthenticationManager(), jwtUtil, objectMapper,
             refreshTokenRepository, memberRepository);
 
-        loginFilter.setFilterProcessesUrl("/api/auth/login");
+        AdminLoginFilter adminLoginFilter = new AdminLoginFilter(
+            adminAuthenticationManager(), jwtUtil, objectMapper,
+            refreshTokenRepository
+        );
 
-        http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
-        http.addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
+        loginFilter.setFilterProcessesUrl("/api/auth/login");
+        adminLoginFilter.setFilterProcessesUrl("/api/auth/admin-login");
+
+        http.addFilterBefore(adminLoginFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(
             new CustomLogoutFilter(jwtUtil, refreshTokenRepository, blackListService),
             LogoutFilter.class);
@@ -78,5 +96,33 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    @Primary
+    public DaoAuthenticationProvider authenticationUserProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(new CustomUserDetailsService(memberRepository));
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    public DaoAuthenticationProvider adminAuthenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(new CustomAdminDetailsService(adminRepository));
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    @Primary
+    public AuthenticationManager userAuthenticationManager() {
+        return new ProviderManager(Collections.singletonList(authenticationUserProvider()));
+    }
+
+    @Bean
+    public AuthenticationManager adminAuthenticationManager() {
+        return new ProviderManager(Collections.singletonList(adminAuthenticationProvider()));
     }
 }
