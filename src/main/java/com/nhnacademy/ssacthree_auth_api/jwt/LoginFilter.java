@@ -67,7 +67,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request,
         HttpServletResponse response, FilterChain chain, Authentication authentication) {
-
+        
         //유저 정보 불러옴.
         String memberLoginId = authentication.getName();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();

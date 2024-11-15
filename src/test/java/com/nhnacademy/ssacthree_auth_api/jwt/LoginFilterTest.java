@@ -1,3 +1,5 @@
+//package com.nhnacademy.ssacthree_auth_api.jwt;
+//
 //import static org.junit.jupiter.api.Assertions.assertEquals;
 //import static org.junit.jupiter.api.Assertions.assertNotNull;
 //import static org.mockito.Mockito.any;
@@ -7,8 +9,6 @@
 //import static org.mockito.Mockito.when;
 //
 //import com.nhnacademy.ssacthree_auth_api.domain.Member;
-//import com.nhnacademy.ssacthree_auth_api.jwt.JWTUtil;
-//import com.nhnacademy.ssacthree_auth_api.jwt.LoginFilter;
 //import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 //import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
 //import jakarta.servlet.FilterChain;
@@ -57,20 +57,17 @@
 //        String role = "ROLE_USER";
 //        String accessToken = "accessToken";
 //        String refreshToken = "refreshToken";
-//        Long accessTokenExpired = 30 * 60 * 1000L;
-//        Long refreshTokenExpired = 120 * 60 * 1000L;
 //
 //        Member member = new Member(1L, 1L, memberLoginId, "test", "20000101", LocalDateTime.now(),
 //            null, "ACTIVE", 0);
 //
 //        // Mock JWTUtil and repository responses
-//        when(jwtUtil.createJwt("access", memberLoginId, role, accessTokenExpired)).thenReturn(
+//        when(jwtUtil.createJwt("access", memberLoginId, role, 30 * 60 * 1000L)).thenReturn(
 //            accessToken);
-//        when(jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired)).thenReturn(
+//        when(jwtUtil.createJwt("refresh", memberLoginId, role, 120 * 60 * 1000L)).thenReturn(
 //            refreshToken);
 //        when(memberRepository.findByMemberLoginId(memberLoginId)).thenReturn(member);
 //
-//        // Set up AuthenticationManager to return a valid Authentication object
 //        Authentication auth = new UsernamePasswordAuthenticationToken(memberLoginId, "testPassword",
 //            List.of(new SimpleGrantedAuthority(role)));
 //        when(authenticationManager.authenticate(
@@ -79,18 +76,27 @@
 //        // Mock request and response
 //        MockHttpServletRequest request = new MockHttpServletRequest();
 //        MockHttpServletResponse response = new MockHttpServletResponse();
-//        FilterChain filterChain = mock(FilterChain.class);
 //
-//        // Set request parameters
-//        request.setParameter("memberLoginId", memberLoginId);
-//        request.setParameter("memberPassword", "testPassword");
+//        // Set request content as JSON
+//        String json = "{\"loginId\": \"" + memberLoginId + "\", \"password\": \"testPassword\"}";
+//        request.setContent(json.getBytes());
+//        request.setContentType("application/json");
 //
-//        // when
-//        loginFilter.doFilter(request, response, filterChain);
-//
+//        when(response.getCookie())
 //        // then
-//        Cookie accessCookie = response.getCookie("access-token");
-//        Cookie refreshCookie = response.getCookie("refresh-token");
+//        Cookie[] cookies = response.getCookies();
+//        assertNotNull(cookies, "Cookies should not be null");
+//        assertEquals(2, cookies.length);
+//
+//        Cookie accessCookie = null;
+//        Cookie refreshCookie = null;
+//        for (Cookie cookie : cookies) {
+//            if ("access-token".equals(cookie.getName())) {
+//                accessCookie = cookie;
+//            } else if ("refresh-token".equals(cookie.getName())) {
+//                refreshCookie = cookie;
+//            }
+//        }
 //
 //        assertNotNull(accessCookie, "Access token cookie should not be null");
 //        assertNotNull(refreshCookie, "Refresh token cookie should not be null");
