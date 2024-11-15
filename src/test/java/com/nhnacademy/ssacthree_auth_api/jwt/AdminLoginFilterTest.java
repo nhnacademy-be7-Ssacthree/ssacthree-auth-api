@@ -9,10 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nhnacademy.ssacthree_auth_api.domain.Member;
 import com.nhnacademy.ssacthree_auth_api.domain.RefreshToken;
 import com.nhnacademy.ssacthree_auth_api.dto.LoginRequestDto;
-import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
 import jakarta.servlet.FilterChain;
 import java.util.Collections;
@@ -33,7 +31,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
 @ExtendWith(MockitoExtension.class)
-class LoginFilterTest {
+class AdminLoginFilterTest {
 
     @Mock
     private AuthenticationManager authenticationManager;
@@ -42,21 +40,18 @@ class LoginFilterTest {
     private JWTUtil jwtUtil;
 
     @Mock
-    private MemberRepository memberRepository;
-
-    @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
     @InjectMocks
-    private LoginFilter loginFilter;
+    private AdminLoginFilter adminLoginFilter;
 
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        loginFilter = new LoginFilter(authenticationManager, jwtUtil, objectMapper,
-            refreshTokenRepository, memberRepository);
+        adminLoginFilter = new AdminLoginFilter(authenticationManager, jwtUtil, objectMapper,
+            refreshTokenRepository);
     }
 
     @Test
@@ -78,7 +73,7 @@ class LoginFilterTest {
             .thenReturn(mockAuth);
 
         // Act (실행)
-        Authentication result = loginFilter.attemptAuthentication(request,
+        Authentication result = adminLoginFilter.attemptAuthentication(request,
             new MockHttpServletResponse());
 
         // Assert (검증)
@@ -104,20 +99,14 @@ class LoginFilterTest {
         when(jwtUtil.createJwt(any(), any(), any(), any())).thenReturn("mockAccessToken",
             "mockRefreshToken");
 
-        // Mock Member Repository
-        Member member = new Member();
-        member.setMemberLoginId("testUser");
-        when(memberRepository.findByMemberLoginId("testUser")).thenReturn(member);
-
         // Call Method
-        loginFilter.successfulAuthentication(new MockHttpServletRequest(), response,
+        adminLoginFilter.successfulAuthentication(new MockHttpServletRequest(), response,
             mock(FilterChain.class), authResult);
 
-        // Verify Cookies and Member Update
+        // Verify Cookies and Token Storage
         assertNotNull(response.getCookies());
         assertTrue(response.getCookies().length > 0);
         verify(refreshTokenRepository).save(any(RefreshToken.class));
-        verify(memberRepository).save(member);
     }
 
     @Test
@@ -127,10 +116,11 @@ class LoginFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         // Call Method
-        loginFilter.unsuccessfulAuthentication(new MockHttpServletRequest(), response, mock(
+        adminLoginFilter.unsuccessfulAuthentication(new MockHttpServletRequest(), response, mock(
             AuthenticationException.class));
 
         // Verify Response Status
         assertEquals(401, response.getStatus());
     }
 }
+
