@@ -7,6 +7,7 @@ import com.nhnacademy.ssacthree_auth_api.jwt.JWTUtil;
 import com.nhnacademy.ssacthree_auth_api.jwt.LoginFilter;
 import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
+import com.nhnacademy.ssacthree_auth_api.service.BlackListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,9 +33,11 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
+    private final BlackListService blackListService;
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception{
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
+        throws Exception {
         return configuration.getAuthenticationManager();
     }
 
@@ -49,19 +52,22 @@ public class SecurityConfig {
         http.httpBasic(AbstractHttpConfigurer::disable);
 
         http.authorizeHttpRequests((auth) -> auth
-            .requestMatchers("/api/auth/login", "/" , "/register").permitAll()
+            .requestMatchers("/api/auth/login", "/", "/register").permitAll()
             .requestMatchers("/api/auth/reissue").permitAll()
+            .requestMatchers("/api/auth/validate").permitAll()
             .anyRequest().authenticated());
 
         LoginFilter loginFilter = new LoginFilter(
-            authenticationManager(authenticationConfiguration), jwtUtil,objectMapper,
-            refreshTokenRepository,memberRepository);
+            authenticationManager(authenticationConfiguration), jwtUtil, objectMapper,
+            refreshTokenRepository, memberRepository);
 
         loginFilter.setFilterProcessesUrl("/api/auth/login");
 
-        http.addFilterBefore(new JWTFilter(jwtUtil),LoginFilter.class);
+        http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
         http.addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
-        http.addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshTokenRepository), LogoutFilter.class);
+        http.addFilterBefore(
+            new CustomLogoutFilter(jwtUtil, refreshTokenRepository, blackListService),
+            LogoutFilter.class);
 
         http.sessionManagement((session) -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS));

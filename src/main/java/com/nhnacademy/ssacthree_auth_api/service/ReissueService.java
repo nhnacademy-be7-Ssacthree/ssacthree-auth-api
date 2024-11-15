@@ -36,16 +36,14 @@ public class ReissueService {
 
         if (refresh == null) {
 
-            //response status code
             return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
         }
 
-        //expired check
+        // 만료시간 체크
         try {
             jwtUtil.isExpired(refresh);
         } catch (ExpiredJwtException e) {
 
-            //response status code
             return new ResponseEntity<>("refresh token expired", HttpStatus.BAD_REQUEST);
         }
 
@@ -54,7 +52,6 @@ public class ReissueService {
 
         if (!category.equals("refresh")) {
 
-            //response status code
             return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
         }
 
@@ -67,7 +64,7 @@ public class ReissueService {
         String memberLoginId = jwtUtil.getMemberLoginId(refresh);
         String role = jwtUtil.getRole(refresh);
 
-        //make new JWT
+        // 새 jwt 생성함.
         String newAccess = jwtUtil.createJwt("access", memberLoginId, role, accessTokenExpired);
         String newRefresh = jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired);
 
