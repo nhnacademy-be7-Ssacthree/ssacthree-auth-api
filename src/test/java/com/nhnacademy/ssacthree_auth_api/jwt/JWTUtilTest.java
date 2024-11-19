@@ -3,6 +3,7 @@ package com.nhnacademy.ssacthree_auth_api.jwt;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import org.junit.jupiter.api.Assertions;
@@ -63,5 +64,14 @@ class JWTUtilTest {
         String token = jwtUtil.createJwt(category, memberLoginId, role, 5L); // 1 ms expiration
         Thread.sleep(1000); // wait to ensure token is expired
         Assertions.assertThrows(ExpiredJwtException.class, () -> jwtUtil.isExpired(token));
+    }
+
+    @Test
+    void testGetExpiredeTime() {
+        String token = jwtUtil.createJwt(category, memberLoginId, role, expirationTime);
+
+        Long actualExpirationTime = jwtUtil.getExpiredTime(token);
+        assertTrue(
+            actualExpirationTime <= expirationTime);
     }
 }

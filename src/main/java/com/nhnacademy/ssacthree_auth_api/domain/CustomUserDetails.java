@@ -25,13 +25,6 @@ public class CustomUserDetails implements UserDetails {
                     return "ROLE_USER";
                 }
             });
-        } else {
-            collection.add(new GrantedAuthority() {
-                @Override
-                public String getAuthority() {
-                    return "ROLE_ADMIN";
-                }
-            });
         }
 
         return collection;
@@ -46,7 +39,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        
+
         return member.getMemberLoginId();
 
 
