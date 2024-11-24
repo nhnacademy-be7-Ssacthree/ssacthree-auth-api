@@ -7,21 +7,27 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/auth/payco-login")
 @RequiredArgsConstructor
 public class PaycoLoginController {
 
     private final PaycoService paycoService;
 
-    @PostMapping
+    @PostMapping(("/api/auth/payco-login"))
     public ResponseEntity<String> paycoLogin(
         @RequestBody PaycoLoginRequest paycoLoginRequest,
         HttpServletResponse response) {
-        paycoService.PaycoLogin(paycoLoginRequest.getPaycoIdNo(), response);
+        paycoService.paycoLogin(paycoLoginRequest.getPaycoIdNo(), response);
         return ResponseEntity.ok("로그인 성공");
+    }
+
+    @PostMapping("/api/auth/payco-connection")
+    public ResponseEntity<String> paycoConnection(@RequestBody PaycoLoginRequest paycoLoginRequest,
+        @RequestHeader(name = "X-USER-ID") String memberLoginId) {
+        paycoService.paycoConnection(paycoLoginRequest.getPaycoIdNo(), memberLoginId);
+        return ResponseEntity.ok("연동 성공");
     }
 }

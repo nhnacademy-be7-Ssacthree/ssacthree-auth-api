@@ -24,7 +24,7 @@ public class PaycoService {
     private final long refreshTokenExpired = 120 * 60 * 1000L; // 2시간
 
 
-    public void PaycoLogin(String paycoIdNo, HttpServletResponse response) {
+    public void paycoLogin(String paycoIdNo, HttpServletResponse response) {
         Member member = memberRepository.findByPaycoIdNumber(paycoIdNo)
             .orElseThrow(() -> new MemberNotFoundException("연동된 계정을 찾을 수 없습니다."));
 
@@ -43,6 +43,13 @@ public class PaycoService {
         member.setMemberLastLoginAt(LocalDateTime.now());
         memberRepository.save(member);
 
+    }
+
+    public void paycoConnection(String paycoIdNo, String memberLoginId) {
+        Member member = memberRepository.findByMemberLoginId(memberLoginId);
+
+        member.setPaycoIdNumber(paycoIdNo);
+        memberRepository.save(member);
     }
 
     private Cookie createCookie(String key, String value, long expiredMs) {

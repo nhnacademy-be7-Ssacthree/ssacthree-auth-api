@@ -51,6 +51,7 @@ public class Member {
     @Column(name = "member_point")
     private int memberPoint;
 
+    @Setter
     @Column(name = "payco_id_number")
     private String paycoIdNumber;
 
