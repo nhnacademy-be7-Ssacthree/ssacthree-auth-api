@@ -8,6 +8,7 @@ import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -39,13 +40,15 @@ public class PaycoService {
         response.addCookie(createCookie("access-token", access, accessTokenExpired));
         response.addCookie(createCookie("refresh-token", refresh, refreshTokenExpired));
 
+        member.setMemberLastLoginAt(LocalDateTime.now());
+        memberRepository.save(member);
+
     }
 
     private Cookie createCookie(String key, String value, long expiredMs) {
         Cookie cookie = new Cookie(key, value);
         cookie.setPath("/");
         cookie.setMaxAge((int) expiredMs / 1000);
-        cookie.setSecure(true);
         cookie.setHttpOnly(true);
         return cookie;
     }
