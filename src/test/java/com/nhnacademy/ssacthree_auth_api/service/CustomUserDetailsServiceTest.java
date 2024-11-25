@@ -32,7 +32,7 @@ public class CustomUserDetailsServiceTest {
 
         String memberLoginId = "test";
         Member member = new Member(1L, 1L, memberLoginId, "test", "20000101", LocalDateTime.now(),
-            null, "ACTIVE", 0);
+            null, "ACTIVE", 0, null);
 
         when(memberRepository.findByMemberLoginId(memberLoginId)).thenReturn(member);
         CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(
@@ -57,7 +57,7 @@ public class CustomUserDetailsServiceTest {
         String memberLoginId = "test";
 
         Member member = new Member(1L, 1L, memberLoginId, "test", "20000101", LocalDateTime.now(),
-            null, "WITHDRAW", 0);
+            null, "WITHDRAW", 0, null);
 
         when(memberRepository.findByMemberLoginId(memberLoginId)).thenReturn(member);
         assertThrows(WithdrawMemberException.class,
