@@ -67,6 +67,7 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/validation").permitAll()
             .requestMatchers("/api/auth/admin").permitAll()
             .requestMatchers("/api/auth/payco-login").permitAll()
+            .requestMatchers("/api/auth/payco-connection").permitAll()
             .anyRequest().authenticated());
 
         LoginFilter loginFilter = new LoginFilter(
