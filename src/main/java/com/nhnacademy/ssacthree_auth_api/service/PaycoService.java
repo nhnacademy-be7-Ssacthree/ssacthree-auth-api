@@ -3,6 +3,7 @@ package com.nhnacademy.ssacthree_auth_api.service;
 import com.nhnacademy.ssacthree_auth_api.domain.Member;
 import com.nhnacademy.ssacthree_auth_api.domain.RefreshToken;
 import com.nhnacademy.ssacthree_auth_api.exception.MemberNotFoundException;
+import com.nhnacademy.ssacthree_auth_api.exception.PaycoAlreadyConnectException;
 import com.nhnacademy.ssacthree_auth_api.jwt.JWTUtil;
 import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
@@ -47,7 +48,9 @@ public class PaycoService {
 
     public void paycoConnection(String paycoIdNo, String memberLoginId) {
         Member member = memberRepository.findByMemberLoginId(memberLoginId);
-
+        if (member.getPaycoIdNumber() != null) {
+            throw new PaycoAlreadyConnectException("이미 연동 된 계정입니다!");
+        }
         member.setPaycoIdNumber(paycoIdNo);
         memberRepository.save(member);
     }
