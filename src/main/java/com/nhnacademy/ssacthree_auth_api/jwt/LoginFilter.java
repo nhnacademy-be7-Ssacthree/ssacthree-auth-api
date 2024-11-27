@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.ssacthree_auth_api.domain.Member;
 import com.nhnacademy.ssacthree_auth_api.domain.RefreshToken;
 import com.nhnacademy.ssacthree_auth_api.dto.LoginRequestDto;
+import com.nhnacademy.ssacthree_auth_api.exception.SleepMemberException;
+import com.nhnacademy.ssacthree_auth_api.exception.WithdrawMemberException;
 import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
 import jakarta.servlet.FilterChain;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Iterator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,6 +24,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@Slf4j
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
@@ -67,7 +71,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request,
         HttpServletResponse response, FilterChain chain, Authentication authentication) {
-        
+
         //유저 정보 불러옴.
         String memberLoginId = authentication.getName();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
@@ -96,8 +100,29 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request,
         HttpServletResponse response, AuthenticationException failed) {
+        log.info("{}", failed.getMessage());
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        int statusCode = 401;
+        String message = failed.getMessage();
+        if (failed.getCause() instanceof WithdrawMemberException) {
+            statusCode = 401;
+            response.setStatus(403);
+        } else if (failed.getCause() instanceof SleepMemberException) {
+            statusCode = 423;
+            response.setStatus(423);
+        } else {
+            response.setStatus(401);
+        }
 
-        response.setStatus(401);
+        try {
+            String jsonResponse = String.format("{\"statusCode\": %d, \"message\": \"%s\"}",
+                statusCode,
+                message);
+            response.getWriter().write(jsonResponse);
+        } catch (IOException e) {
+            log.error("IOException", e);
+        }
     }
 
     private Cookie createCookie(String key, String value, long expiredMs) {
