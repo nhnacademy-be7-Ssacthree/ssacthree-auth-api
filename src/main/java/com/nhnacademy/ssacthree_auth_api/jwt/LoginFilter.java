@@ -106,7 +106,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         int statusCode = 401;
         String message = failed.getMessage();
         if (failed.getCause() instanceof WithdrawMemberException) {
-            statusCode = 401;
+            statusCode = 403;
             response.setStatus(403);
         } else if (failed.getCause() instanceof SleepMemberException) {
             statusCode = 423;
