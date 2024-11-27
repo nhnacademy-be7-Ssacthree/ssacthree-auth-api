@@ -2,6 +2,7 @@ package com.nhnacademy.ssacthree_auth_api.service;
 
 import com.nhnacademy.ssacthree_auth_api.domain.CustomUserDetails;
 import com.nhnacademy.ssacthree_auth_api.domain.Member;
+import com.nhnacademy.ssacthree_auth_api.exception.SleepMemberException;
 import com.nhnacademy.ssacthree_auth_api.exception.WithdrawMemberException;
 import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (memberData != null) {
             if (memberData.getMemberStatus().equalsIgnoreCase("withdraw")) {
                 throw new WithdrawMemberException("탈퇴한 회원입니다.");
+            }
+            if (memberData.getMemberStatus().equalsIgnoreCase("sleep")) {
+                throw new SleepMemberException("휴면 계정입니다.");
             }
             return new CustomUserDetails(memberData);
         }

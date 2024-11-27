@@ -4,6 +4,7 @@ import com.nhnacademy.ssacthree_auth_api.domain.Member;
 import com.nhnacademy.ssacthree_auth_api.domain.RefreshToken;
 import com.nhnacademy.ssacthree_auth_api.exception.MemberNotFoundException;
 import com.nhnacademy.ssacthree_auth_api.exception.PaycoAlreadyConnectException;
+import com.nhnacademy.ssacthree_auth_api.exception.SleepMemberException;
 import com.nhnacademy.ssacthree_auth_api.jwt.JWTUtil;
 import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
@@ -21,19 +22,24 @@ public class PaycoService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JWTUtil jwtUtil;
 
-    private final long accessTokenExpired = 30 * 60 * 1000L; // 30분
-    private final long refreshTokenExpired = 120 * 60 * 1000L; // 2시간
-
 
     public void paycoLogin(String paycoIdNo, HttpServletResponse response) {
         Member member = memberRepository.findByPaycoIdNumber(paycoIdNo)
             .orElseThrow(() -> new MemberNotFoundException("연동된 계정을 찾을 수 없습니다."));
 
+        if (member.getMemberStatus().equalsIgnoreCase("sleep")) {
+            throw new SleepMemberException("휴면 계정입니다.");
+        }
+
         String role = "ROLE_USER";
 
         //토큰을 생성 하는 방법
+        // 30분
+        long accessTokenExpired = 30 * 60 * 1000L;
         String access = jwtUtil.createJwt("access", member.getMemberLoginId(), role,
             accessTokenExpired);
+        // 2시간
+        long refreshTokenExpired = 120 * 60 * 1000L;
         String refresh = jwtUtil.createJwt("refresh", member.getMemberLoginId(), role,
             refreshTokenExpired);
         addRefreshToken(member.getMemberLoginId(), refresh, refreshTokenExpired);
