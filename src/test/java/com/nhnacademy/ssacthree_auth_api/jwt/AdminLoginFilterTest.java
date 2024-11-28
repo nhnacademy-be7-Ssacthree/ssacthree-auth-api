@@ -85,7 +85,7 @@ class AdminLoginFilterTest {
 
     @Test
     @DisplayName("successfulAuthentication - 성공적인 인증")
-    void successfulAuthentication_Success() throws Exception {
+    void successfulAuthentication_Success() {
         // Mock Response
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -111,7 +111,7 @@ class AdminLoginFilterTest {
 
     @Test
     @DisplayName("unsuccessfulAuthentication - 실패한 인증")
-    void unsuccessfulAuthentication_Success() throws Exception {
+    void unsuccessfulAuthentication_Success() {
         // Mock Response
         MockHttpServletResponse response = new MockHttpServletResponse();
 

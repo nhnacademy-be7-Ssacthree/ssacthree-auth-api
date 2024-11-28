@@ -3,6 +3,7 @@ package com.nhnacademy.ssacthree_auth_api.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.ssacthree_auth_api.domain.RefreshToken;
 import com.nhnacademy.ssacthree_auth_api.dto.LoginRequestDto;
+import com.nhnacademy.ssacthree_auth_api.exception.IllegalFormatException;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
@@ -25,10 +26,10 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final ObjectMapper objectMapper;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private final long accessTokenExpired = 30 * 60 * 1000L; // 30분
-    private final long refreshTokenExpired = 120 * 60 * 1000L; // 2시간
-    private final String usernameParameter = "memberLoginId";
-    private final String passwordParameter = "memberPassword";
+    private static final long ACCESS_TOKEN_EXPIRED = 30 * 60 * 1000L; // 30분
+    private static final long REFRESH_TOKEN_EXPIRED = 120 * 60 * 1000L; // 2시간
+    private static final String USERNAME_PARAMETER = "memberLoginId";
+    private static final String PASSWORD_PARAMETER = "memberPassword";
 
     public AdminLoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil,
         ObjectMapper objectMapper, RefreshTokenRepository refreshRepository
@@ -37,8 +38,8 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
         this.jwtUtil = jwtUtil;
         this.objectMapper = objectMapper;
         this.refreshTokenRepository = refreshRepository;
-        setUsernameParameter(usernameParameter);
-        setPasswordParameter(passwordParameter);
+        setUsernameParameter(USERNAME_PARAMETER);
+        setPasswordParameter(PASSWORD_PARAMETER);
     }
 
     @Override
@@ -50,12 +51,12 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
             loginRequestDto = objectMapper.readValue(request.getInputStream(),
                 LoginRequestDto.class);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IllegalFormatException("잘못된 형식의 요청입니다.");
         }
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
             loginRequestDto.getLoginId(), loginRequestDto.getPassword(), null);
-        
+
         return authenticationManager.authenticate(authToken);
     }
 
@@ -72,12 +73,12 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = auth.getAuthority();
 
         //토큰을 생성 하는 방법
-        String access = jwtUtil.createJwt("access", memberLoginId, role, accessTokenExpired);
-        String refresh = jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired);
-        addRefreshToken(memberLoginId, refresh, refreshTokenExpired);
+        String access = jwtUtil.createJwt("access", memberLoginId, role, ACCESS_TOKEN_EXPIRED);
+        String refresh = jwtUtil.createJwt("refresh", memberLoginId, role, REFRESH_TOKEN_EXPIRED);
+        addRefreshToken(memberLoginId, refresh, REFRESH_TOKEN_EXPIRED);
         //응답 설정
-        response.addCookie(createCookie("access-token", access, accessTokenExpired));
-        response.addCookie(createCookie("refresh-token", refresh, refreshTokenExpired));
+        response.addCookie(createCookie("access-token", access, ACCESS_TOKEN_EXPIRED));
+        response.addCookie(createCookie("refresh-token", refresh, REFRESH_TOKEN_EXPIRED));
 
 
     }

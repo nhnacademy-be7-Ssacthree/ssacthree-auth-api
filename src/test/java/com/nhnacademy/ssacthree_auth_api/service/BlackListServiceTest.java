@@ -19,7 +19,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 @ExtendWith(MockitoExtension.class)
-public class BlackListServiceTest {
+class BlackListServiceTest {
 
     @Mock
     private RedisTemplate<String, String> redisTemplate;

@@ -18,8 +18,8 @@ public class ReissueService {
 
     private final JWTUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final long accessTokenExpired = 30 * 60 * 1000L; // 30분
-    private final long refreshTokenExpired = 120 * 60 * 1000L; // 2시간
+    private static final long ACCESS_TOKEN_EXPIRED = 30 * 60 * 1000L; // 30분
+    private static final long REFRESH_TOKEN_EXPIRED = 120 * 60 * 1000L; // 2시간
 
     public ResponseEntity<?> reissueRefreshToken(HttpServletRequest request,
         HttpServletResponse response) {
@@ -65,15 +65,16 @@ public class ReissueService {
         String role = jwtUtil.getRole(refresh);
 
         // 새 jwt 생성함.
-        String newAccess = jwtUtil.createJwt("access", memberLoginId, role, accessTokenExpired);
-        String newRefresh = jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired);
+        String newAccess = jwtUtil.createJwt("access", memberLoginId, role, ACCESS_TOKEN_EXPIRED);
+        String newRefresh = jwtUtil.createJwt("refresh", memberLoginId, role,
+            REFRESH_TOKEN_EXPIRED);
 
         refreshTokenRepository.deleteById(jwtUtil.getMemberLoginId(refresh));
 
-        addRefreshToken(memberLoginId, newRefresh, refreshTokenExpired);
+        addRefreshToken(memberLoginId, newRefresh, REFRESH_TOKEN_EXPIRED);
         //response
-        response.addCookie(createCookie("access-token", newAccess, accessTokenExpired));
-        response.addCookie(createCookie("refresh-token", newRefresh, refreshTokenExpired));
+        response.addCookie(createCookie("access-token", newAccess, ACCESS_TOKEN_EXPIRED));
+        response.addCookie(createCookie("refresh-token", newRefresh, REFRESH_TOKEN_EXPIRED));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

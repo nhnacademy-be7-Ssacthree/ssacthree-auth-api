@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(AdminController.class)
 @ExtendWith(MockitoExtension.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class AdminControllerTest {
+class AdminControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
