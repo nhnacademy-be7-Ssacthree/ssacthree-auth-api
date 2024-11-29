@@ -19,7 +19,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "member")
 public class Member implements Serializable {
-    
+
     @Id
     @Column(name = "customer_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,6 +46,7 @@ public class Member implements Serializable {
     @Column(name = "member_last_login_at")
     private LocalDateTime memberLastLoginAt;
 
+    @Setter
     @Column(name = "member_status")
     private String memberStatus;
 
