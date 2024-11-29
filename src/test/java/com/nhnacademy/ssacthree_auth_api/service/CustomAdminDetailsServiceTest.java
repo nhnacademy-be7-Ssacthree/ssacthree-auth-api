@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.nhnacademy.ssacthree_auth_api.domain.Admin;
 import com.nhnacademy.ssacthree_auth_api.domain.CustomAdminDetails;
 import com.nhnacademy.ssacthree_auth_api.repository.AdminRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -45,6 +46,7 @@ class CustomAdminDetailsServiceTest {
         when(adminRepository.findByAdminLoginId(adminLoginId)).thenReturn(admin);
         CustomAdminDetails adminDetails = (CustomAdminDetails) customAdminDetailsService.loadUserByUsername(
             adminLoginId);
+        Assertions.assertNotNull(adminDetails);
     }
 
 

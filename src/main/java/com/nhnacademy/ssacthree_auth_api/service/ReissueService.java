@@ -21,7 +21,7 @@ public class ReissueService {
     private static final long ACCESS_TOKEN_EXPIRED = 30 * 60 * 1000L; // 30분
     private static final long REFRESH_TOKEN_EXPIRED = 120 * 60 * 1000L; // 2시간
 
-    public ResponseEntity<?> reissueRefreshToken(HttpServletRequest request,
+    public ResponseEntity<String> reissueRefreshToken(HttpServletRequest request,
         HttpServletResponse response) {
 
         String refresh = null;

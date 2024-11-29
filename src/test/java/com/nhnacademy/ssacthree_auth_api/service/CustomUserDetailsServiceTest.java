@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
-import com.nhnacademy.ssacthree_auth_api.domain.Admin;
 import com.nhnacademy.ssacthree_auth_api.domain.CustomUserDetails;
 import com.nhnacademy.ssacthree_auth_api.domain.Member;
 import com.nhnacademy.ssacthree_auth_api.exception.WithdrawMemberException;
@@ -41,16 +40,6 @@ class CustomUserDetailsServiceTest {
         assertNotNull(userDetails);
     }
 
-    @Test
-    void testLoadAdminByUsername() {
-
-        String memberLoginId = "test";
-        Admin admin = new Admin(1L, memberLoginId, "password", "test");
-
-        when(memberRepository.findByMemberLoginId(memberLoginId)).thenReturn(null);
-        CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(
-            memberLoginId);
-    }
 
     @Test
     void testLoadUserByUsernameIfWithdraw() {

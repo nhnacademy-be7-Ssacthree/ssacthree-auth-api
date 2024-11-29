@@ -7,22 +7,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 public class CustomAdminDetails implements UserDetails {
 
-    private Admin admin;
+    private final Admin admin;
 
     public CustomAdminDetails(Admin admin) {
         this.admin = admin;
     }
-    
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<GrantedAuthority> collection = new ArrayList<>();
         if (admin != null) {
-            collection.add(new GrantedAuthority() {
-                @Override
-                public String getAuthority() {
-                    return "ROLE_ADMIN";
-                }
-            });
+            collection.add(() -> "ROLE_ADMIN");
         }
 
         return collection;

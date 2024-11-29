@@ -19,7 +19,7 @@ class CustomUserDetailsTest {
 
     @BeforeEach
     void setUp() {
-        Member member = new Member(1L, 1L, "testUser", "testPassword", "20000101",
+        member = new Member(1L, 1L, "testUser", "testPassword", "20000101",
             LocalDateTime.now(),
             null, "ACTIVE", 0, null);
         customUserDetails = new CustomUserDetails(member);

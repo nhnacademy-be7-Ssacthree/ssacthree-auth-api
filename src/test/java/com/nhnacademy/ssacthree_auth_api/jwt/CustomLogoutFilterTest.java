@@ -44,7 +44,7 @@ class CustomLogoutFilterTest {
     void setUp() {
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
-        filterChain = (request, response) -> {
+        filterChain = (servletRequest, servletResponse) -> {
         };
     }
 
