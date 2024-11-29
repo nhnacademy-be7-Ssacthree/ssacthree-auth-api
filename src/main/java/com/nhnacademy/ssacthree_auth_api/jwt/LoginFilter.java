@@ -55,6 +55,11 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest request,
         HttpServletResponse response) throws AuthenticationException {
 
+        return getAuthentication(request, objectMapper, authenticationManager);
+    }
+
+    static Authentication getAuthentication(HttpServletRequest request, ObjectMapper objectMapper,
+        AuthenticationManager authenticationManager) {
         LoginRequestDto loginRequestDto = null;
         try {
             loginRequestDto = objectMapper.readValue(request.getInputStream(),

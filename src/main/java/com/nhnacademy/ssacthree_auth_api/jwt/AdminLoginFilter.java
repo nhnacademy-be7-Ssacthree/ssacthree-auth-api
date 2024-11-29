@@ -1,19 +1,17 @@
 package com.nhnacademy.ssacthree_auth_api.jwt;
 
+import static com.nhnacademy.ssacthree_auth_api.jwt.LoginFilter.getAuthentication;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.ssacthree_auth_api.domain.RefreshToken;
-import com.nhnacademy.ssacthree_auth_api.dto.LoginRequestDto;
-import com.nhnacademy.ssacthree_auth_api.exception.IllegalFormatException;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -46,18 +44,7 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest request,
         HttpServletResponse response) throws AuthenticationException {
 
-        LoginRequestDto loginRequestDto = null;
-        try {
-            loginRequestDto = objectMapper.readValue(request.getInputStream(),
-                LoginRequestDto.class);
-        } catch (IOException e) {
-            throw new IllegalFormatException("잘못된 형식의 요청입니다.");
-        }
-
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-            loginRequestDto.getLoginId(), loginRequestDto.getPassword(), null);
-
-        return authenticationManager.authenticate(authToken);
+        return getAuthentication(request, objectMapper, authenticationManager);
     }
 
     @Override
@@ -75,7 +62,7 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
         //토큰을 생성 하는 방법
         String access = jwtUtil.createJwt("access", memberLoginId, role, ACCESS_TOKEN_EXPIRED);
         String refresh = jwtUtil.createJwt("refresh", memberLoginId, role, REFRESH_TOKEN_EXPIRED);
-        addRefreshToken(memberLoginId, refresh, REFRESH_TOKEN_EXPIRED);
+        addRefreshToken(memberLoginId, refresh);
         //응답 설정
         response.addCookie(createCookie("access-token", access, ACCESS_TOKEN_EXPIRED));
         response.addCookie(createCookie("refresh-token", refresh, REFRESH_TOKEN_EXPIRED));
@@ -99,9 +86,10 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
         return cookie;
     }
 
-    private void addRefreshToken(String memberLoginId, String refresh, long expiredMs) {
+    private void addRefreshToken(String memberLoginId, String refresh) {
         // 이렇게 redis에 저장. ttl 땜시 유효시간 지나면 알아서 레디스에서 삭제됨.
-        RefreshToken refreshToken = new RefreshToken(memberLoginId, refresh, expiredMs);
+        RefreshToken refreshToken = new RefreshToken(memberLoginId, refresh,
+            AdminLoginFilter.REFRESH_TOKEN_EXPIRED);
         refreshTokenRepository.save(refreshToken);
     }
 
