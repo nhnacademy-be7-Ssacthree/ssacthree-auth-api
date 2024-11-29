@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(BlackListController.class)
 @ExtendWith(MockitoExtension.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class BlackListControllerTest {
+class BlackListControllerTest {
 
     @MockBean
     private BlackListService blackListService;

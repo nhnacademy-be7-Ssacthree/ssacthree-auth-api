@@ -60,7 +60,7 @@ public class SecurityConfig {
 
         http.httpBasic(AbstractHttpConfigurer::disable);
 
-        http.authorizeHttpRequests((auth) -> auth
+        http.authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/login", "/", "/register", "/api/auth/admin-login")
             .permitAll()
             .requestMatchers("/api/auth/reissue").permitAll()
@@ -88,7 +88,7 @@ public class SecurityConfig {
             new CustomLogoutFilter(jwtUtil, refreshTokenRepository, blackListService),
             LogoutFilter.class);
 
-        http.sessionManagement((session) -> session
+        http.sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();

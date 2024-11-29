@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     @PostMapping
-    public ResponseEntity<?> checkAdmin() {
+    public ResponseEntity<String> checkAdmin() {
         return ResponseEntity.ok().build();
     }
 }

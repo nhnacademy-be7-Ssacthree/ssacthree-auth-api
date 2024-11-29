@@ -30,7 +30,8 @@ public class BlackListService {
                 break;
             }
         }
-        return redisTemplate.hasKey(accessToken);
+
+        return Boolean.TRUE.equals(redisTemplate.hasKey(accessToken));
 
 
     }

@@ -95,8 +95,10 @@ public class CustomLogoutFilter extends GenericFilterBean {
     private Cookie cookieDestroyer(String cookieName) {
 
         Cookie cookie = new Cookie(cookieName, null);
+        cookie.setSecure(true);
         cookie.setMaxAge(0);
         cookie.setPath("/");
+        cookie.setHttpOnly(true);
         return cookie;
     }
 }

@@ -21,7 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(ReissueController.class)
 @ExtendWith(MockitoExtension.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class ReissueControllerTest {
+class ReissueControllerTest {
 
     @MockBean
     private ReissueService reissueService;

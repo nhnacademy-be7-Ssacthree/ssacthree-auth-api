@@ -1,18 +1,17 @@
 package com.nhnacademy.ssacthree_auth_api.jwt;
 
+import static com.nhnacademy.ssacthree_auth_api.jwt.LoginFilter.getAuthentication;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.ssacthree_auth_api.domain.RefreshToken;
-import com.nhnacademy.ssacthree_auth_api.dto.LoginRequestDto;
 import com.nhnacademy.ssacthree_auth_api.repository.RefreshTokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,10 +24,10 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final ObjectMapper objectMapper;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private final long accessTokenExpired = 30 * 60 * 1000L; // 30분
-    private final long refreshTokenExpired = 120 * 60 * 1000L; // 2시간
-    private final String usernameParameter = "memberLoginId";
-    private final String passwordParameter = "memberPassword";
+    private static final long ACCESS_TOKEN_EXPIRED = 30 * 60 * 1000L; // 30분
+    private static final long REFRESH_TOKEN_EXPIRED = 120 * 60 * 1000L; // 2시간
+    private static final String USERNAME_PARAMETER = "memberLoginId";
+    private static final String PASSWORD_PARAMETER = "memberPassword";
 
     public AdminLoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil,
         ObjectMapper objectMapper, RefreshTokenRepository refreshRepository
@@ -37,26 +36,15 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
         this.jwtUtil = jwtUtil;
         this.objectMapper = objectMapper;
         this.refreshTokenRepository = refreshRepository;
-        setUsernameParameter(usernameParameter);
-        setPasswordParameter(passwordParameter);
+        setUsernameParameter(USERNAME_PARAMETER);
+        setPasswordParameter(PASSWORD_PARAMETER);
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request,
         HttpServletResponse response) throws AuthenticationException {
 
-        LoginRequestDto loginRequestDto = null;
-        try {
-            loginRequestDto = objectMapper.readValue(request.getInputStream(),
-                LoginRequestDto.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-            loginRequestDto.getLoginId(), loginRequestDto.getPassword(), null);
-        
-        return authenticationManager.authenticate(authToken);
+        return getAuthentication(request, objectMapper, authenticationManager);
     }
 
     @Override
@@ -72,12 +60,12 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = auth.getAuthority();
 
         //토큰을 생성 하는 방법
-        String access = jwtUtil.createJwt("access", memberLoginId, role, accessTokenExpired);
-        String refresh = jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired);
-        addRefreshToken(memberLoginId, refresh, refreshTokenExpired);
+        String access = jwtUtil.createJwt("access", memberLoginId, role, ACCESS_TOKEN_EXPIRED);
+        String refresh = jwtUtil.createJwt("refresh", memberLoginId, role, REFRESH_TOKEN_EXPIRED);
+        addRefreshToken(memberLoginId, refresh);
         //응답 설정
-        response.addCookie(createCookie("access-token", access, accessTokenExpired));
-        response.addCookie(createCookie("refresh-token", refresh, refreshTokenExpired));
+        response.addCookie(createCookie("access-token", access, ACCESS_TOKEN_EXPIRED));
+        response.addCookie(createCookie("refresh-token", refresh, REFRESH_TOKEN_EXPIRED));
 
 
     }
@@ -98,9 +86,10 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
         return cookie;
     }
 
-    private void addRefreshToken(String memberLoginId, String refresh, long expiredMs) {
+    private void addRefreshToken(String memberLoginId, String refresh) {
         // 이렇게 redis에 저장. ttl 땜시 유효시간 지나면 알아서 레디스에서 삭제됨.
-        RefreshToken refreshToken = new RefreshToken(memberLoginId, refresh, expiredMs);
+        RefreshToken refreshToken = new RefreshToken(memberLoginId, refresh,
+            AdminLoginFilter.REFRESH_TOKEN_EXPIRED);
         refreshTokenRepository.save(refreshToken);
     }
 

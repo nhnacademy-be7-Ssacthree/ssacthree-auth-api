@@ -16,7 +16,7 @@ public class BlackListController {
     private final BlackListService blackListService;
 
     @PostMapping
-    public ResponseEntity<?> validateToken(HttpServletRequest request) {
+    public ResponseEntity<String> validateToken(HttpServletRequest request) {
 
         if (!blackListService.isValidToken(request)) {
             return ResponseEntity.ok().build();

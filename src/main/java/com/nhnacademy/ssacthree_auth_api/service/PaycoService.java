@@ -66,6 +66,7 @@ public class PaycoService {
         cookie.setPath("/");
         cookie.setMaxAge((int) expiredMs / 1000);
         cookie.setHttpOnly(true);
+        cookie.setSecure(true);
         return cookie;
     }
 

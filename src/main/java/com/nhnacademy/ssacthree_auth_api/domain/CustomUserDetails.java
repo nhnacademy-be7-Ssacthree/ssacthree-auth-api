@@ -9,7 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 public class CustomUserDetails implements UserDetails {
 
-    private Member member;
+    private final Member member;
 
     public CustomUserDetails(Member member) {
         this.member = member;
@@ -19,12 +19,7 @@ public class CustomUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<GrantedAuthority> collection = new ArrayList<>();
         if (member != null) {
-            collection.add(new GrantedAuthority() {
-                @Override
-                public String getAuthority() {
-                    return "ROLE_USER";
-                }
-            });
+            collection.add(() -> "ROLE_USER");
         }
 
         return collection;
@@ -45,24 +40,6 @@ public class CustomUserDetails implements UserDetails {
 
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
 }
 

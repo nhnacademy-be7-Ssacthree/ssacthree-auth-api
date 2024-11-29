@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.ssacthree_auth_api.domain.Member;
 import com.nhnacademy.ssacthree_auth_api.domain.RefreshToken;
 import com.nhnacademy.ssacthree_auth_api.dto.LoginRequestDto;
+import com.nhnacademy.ssacthree_auth_api.exception.IllegalFormatException;
 import com.nhnacademy.ssacthree_auth_api.exception.SleepMemberException;
 import com.nhnacademy.ssacthree_auth_api.exception.WithdrawMemberException;
 import com.nhnacademy.ssacthree_auth_api.repository.MemberRepository;
@@ -33,10 +34,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
 
-    private final long accessTokenExpired = 30 * 60 * 1000L; // 30분
-    private final long refreshTokenExpired = 120 * 60 * 1000L; // 2시간
-    private final String usernameParameter = "memberLoginId";
-    private final String passwordParameter = "memberPassword";
+    private static final long ACCESS_TOKEN_EXPIRED = 30 * 60 * 1000L; // 30분
+    private static final long REFRESH_TOKEN_EXPIRED = 120 * 60 * 1000L; // 2시간
+    private static final String MEMBER_LOGIN_ID = "memberLoginId";
+    private static final String PASSWORD_PARAMETER = "memberPassword";
 
     public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil,
         ObjectMapper objectMapper, RefreshTokenRepository refreshRepository,
@@ -46,20 +47,25 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         this.objectMapper = objectMapper;
         this.refreshTokenRepository = refreshRepository;
         this.memberRepository = memberRepository;
-        setUsernameParameter(usernameParameter);
-        setPasswordParameter(passwordParameter);
+        setUsernameParameter(MEMBER_LOGIN_ID);
+        setPasswordParameter(PASSWORD_PARAMETER);
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request,
         HttpServletResponse response) throws AuthenticationException {
 
+        return getAuthentication(request, objectMapper, authenticationManager);
+    }
+
+    static Authentication getAuthentication(HttpServletRequest request, ObjectMapper objectMapper,
+        AuthenticationManager authenticationManager) {
         LoginRequestDto loginRequestDto = null;
         try {
             loginRequestDto = objectMapper.readValue(request.getInputStream(),
                 LoginRequestDto.class);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IllegalFormatException("잘못된 형식의 요청입니다.");
         }
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -81,12 +87,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = auth.getAuthority();
 
         //토큰을 생성 하는 방법
-        String access = jwtUtil.createJwt("access", memberLoginId, role, accessTokenExpired);
-        String refresh = jwtUtil.createJwt("refresh", memberLoginId, role, refreshTokenExpired);
-        addRefreshToken(memberLoginId, refresh, refreshTokenExpired);
+        String access = jwtUtil.createJwt("access", memberLoginId, role, ACCESS_TOKEN_EXPIRED);
+        String refresh = jwtUtil.createJwt("refresh", memberLoginId, role, REFRESH_TOKEN_EXPIRED);
+        addRefreshToken(memberLoginId, refresh, REFRESH_TOKEN_EXPIRED);
         //응답 설정
-        response.addCookie(createCookie("access-token", access, accessTokenExpired));
-        response.addCookie(createCookie("refresh-token", refresh, refreshTokenExpired));
+        response.addCookie(createCookie("access-token", access, ACCESS_TOKEN_EXPIRED));
+        response.addCookie(createCookie("refresh-token", refresh, REFRESH_TOKEN_EXPIRED));
 
         // 마지막 로그인 날짜 업데이트
         Member member = memberRepository.findByMemberLoginId(memberLoginId);
