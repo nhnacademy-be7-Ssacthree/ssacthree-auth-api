@@ -68,6 +68,7 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/admin").permitAll()
             .requestMatchers("/api/auth/payco-login").permitAll()
             .requestMatchers("/api/auth/payco-connection").permitAll()
+            .requestMatchers("/actuator/prometheus").permitAll()
             .anyRequest().authenticated());
 
         LoginFilter loginFilter = new LoginFilter(
