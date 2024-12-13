@@ -1,15 +1,15 @@
-package com.nhnacademy.ssacthree_auth_api.dto;
+package com.nhnacademy.ssacthree_auth_api.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
 @AllArgsConstructor
 @Getter
 @NoArgsConstructor
-public class LoginRequestDto {
+public class ErrorResponse {
 
-    private String loginId;
-    private String password;
+    private String message;
+    private Integer statusCode;
+
 }

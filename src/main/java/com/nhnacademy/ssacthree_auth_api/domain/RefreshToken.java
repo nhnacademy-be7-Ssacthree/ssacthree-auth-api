@@ -15,7 +15,7 @@ public class RefreshToken {
     @Id
     private String memberLoginId;
 
-    @Indexed    // refreshToken으로 조회하기 위함임.
+    @Indexed
     private String refreshToken;
 
     @TimeToLive

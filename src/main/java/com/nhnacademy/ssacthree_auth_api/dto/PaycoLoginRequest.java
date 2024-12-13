@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
-@AllArgsConstructor
 @Getter
+@AllArgsConstructor
 @NoArgsConstructor
-public class LoginRequestDto {
+public class PaycoLoginRequest {
 
-    private String loginId;
-    private String password;
+    private String paycoIdNo;
 }
